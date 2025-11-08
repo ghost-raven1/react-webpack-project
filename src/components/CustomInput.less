@@ -1,0 +1,143 @@
+// Компактные стили инпута, скоуп по контейнеру библиотеки
+[data-dossier-scope] [class*='-input'] {
+  position: relative;
+  margin-bottom: 16px;
+  
+  > [class*='-input__label'] {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: #2f1b4d;
+    font-size: 14px;
+  }
+
+  > [class*='-input__label--required']::after {
+    content: ' *';
+    color: #eb2f96;
+  }
+
+  & [class*='-input__field'],
+  [class*='-input'][class*='-input__field'],
+  [class*='-input-affix-wrapper'][class*='-input__field'] {
+    width: 100%;
+    padding: 8px 16px;
+    border: 1px solid #d3adf7;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
+    
+    &:hover {
+      border-color: #531dab;
+    }
+    
+    &:focus {
+      border-color: #722ed1;
+      box-shadow: 0 0 0 2px rgba(114, 46, 209, 0.2);
+      outline: none;
+    }
+    
+    &[class*='-input__field--borderless'] {
+      border: none;
+      border-bottom: 1px solid #d3adf7;
+      border-radius: 0;
+      padding-left: 0;
+      padding-right: 0;
+      background: transparent;
+      
+      &:focus {
+        border-bottom-color: #722ed1;
+        box-shadow: none;
+      }
+    }
+    
+    &[class*='-input__field--error'] {
+      border-color: #eb2f96;
+      
+      &:focus {
+        border-color: #eb2f96;
+        box-shadow: 0 0 0 2px rgba(235, 47, 150, 0.2);
+      }
+    }
+    
+    &[class*='-input__field--success'] {
+      border-color: #52c41a;
+      
+      &:focus {
+        border-color: #52c41a;
+        box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+      }
+    }
+    
+    &[class*='-input__field--warning'] {
+      border-color: #faad14;
+      
+      &:focus {
+        border-color: #faad14;
+        box-shadow: 0 0 0 2px rgba(250, 173, 20, 0.2);
+      }
+    }
+  }
+  
+  & [class*='-input__error'] {
+    color: #eb2f96;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+  }
+  
+  & [class*='-input__help'] {
+    color: #531dab;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+  }
+  
+  &[class*='-input--small'] {
+    [class*='-input__field'] {
+      padding: 4px 8px;
+      font-size: 12px;
+      height: 24px;
+    }
+    
+    [class*='-input__label'] {
+      font-size: 12px;
+    }
+  }
+  
+  &[class*='-input--large'] {
+    [class*='-input__field'] {
+      padding: 16px 24px;
+      font-size: 16px;
+      height: 40px;
+    }
+    
+    [class*='-input__label'] {
+      font-size: 16px;
+    }
+  }
+}
+
+// Базовый оверлей на чистые AntD инпуты внутри скоупа
+[data-dossier-scope] [class*='-input'],
+[data-dossier-scope] [class*='-input-affix-wrapper'] {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid #d3adf7;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+
+  &:hover {
+    border-color: #531dab;
+  }
+
+  &:focus,
+  &[class*='-input-focused'],
+  &[class*='-input-affix-wrapper-focused'] {
+    border-color: #722ed1;
+    box-shadow: 0 0 0 2px rgba(114, 46, 209, 0.2);
+    outline: none;
+  }
+}

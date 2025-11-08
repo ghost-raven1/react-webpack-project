@@ -1,0 +1,55 @@
+// Глобальные префикс-агностичные оверлеи для AntD-компонентов
+// Работают с любыми prefixCls (например, ant-, dossier-ant-, admin-)
+
+[data-dossier-scope] {
+  // Checkbox
+  [class*='-checkbox'] {
+    [class*='-checkbox-inner'] {
+      border: 1px solid #d3adf7;
+      border-radius: 2px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover [class*='-checkbox-inner'] {
+      border-color: #531dab;
+    }
+
+    &[class*='-checkbox-checked'] [class*='-checkbox-inner'] {
+      background-color: #722ed1;
+      border-color: #722ed1;
+    }
+  }
+
+  // Radio
+  [class*='-radio'] {
+    [class*='-radio-inner'] {
+      border: 1px solid #d3adf7;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover [class*='-radio-inner'] {
+      border-color: #531dab;
+    }
+
+    &[class*='-radio-checked'] [class*='-radio-inner'] {
+      border-color: #722ed1;
+    }
+  }
+
+  // Form Item
+  [class*='-form-item'] {
+    margin-bottom: 16px;
+  }
+
+  [class*='-form-item-has-error'] {
+    [class*='-form-item-explain'] {
+      color: #eb2f96;
+    }
+    [class*='-input'],
+    [class*='-select'] [class*='-select-selector'] {
+      border-color: #eb2f96;
+      box-shadow: 0 0 0 2px rgba(235, 47, 150, 0.2);
+    }
+  }
+}
+
