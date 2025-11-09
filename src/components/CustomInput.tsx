@@ -2,7 +2,9 @@ import React, { forwardRef } from 'react';
 import { Input } from 'antd';
 import type { InputProps } from 'antd/es/input';
 import './CustomInput.less';
-import { useBem } from '../hooks/useBem';
+import { setup } from 'bem-cn';
+import { useDossierAntd } from '../hooks/useDossierAntd';
+import { getCssPrefix } from '../utils/csl';
 import { devAttrs } from '../utils/devAttrs';
 import type { UiSize, AntdSize } from '../utils/types';
 import { useUiSize } from '../hooks/useUiSize';
@@ -31,28 +33,23 @@ export const CustomInput = forwardRef<any, CustomInputProps>(({
   size: antdSizeProp,
   ...props
 }, ref) => {
-  const bem = useBem('input');
+  const { prefix } = useDossierAntd();
+  const cssPrefix = getCssPrefix(prefix);
+  const block = setup({ ns: `${cssPrefix}-`, mod: '--', modValue: '-' });
+  const b = block('input');
   const { uiSizeFinal, antdSizeFinal } = useUiSize(uiSize, antdSizeProp as AntdSize);
 
-  const containerClass = bem.join(
-    bem.b(),
-    bem.m(uiSizeFinal),
-    className,
-  );
+  const containerClass = [b({ [uiSizeFinal]: true }), className].filter(Boolean).join(' ');
 
-  const fieldClass = bem.join(
-    bem.e('field'),
-    variant !== 'default' && bem.em('field', variant),
-    borderless && bem.em('field', 'borderless'),
-  );
+  const fieldMods: Record<string, boolean> = {};
+  if (variant !== 'default') fieldMods[variant] = true;
+  if (borderless) fieldMods.borderless = true;
+  const fieldClass = b('field', fieldMods);
 
   return (
     <div className={containerClass}>
       {label && (
-        <label className={bem.join(
-          bem.e('label'),
-          required && bem.em('label', 'required'),
-        )}>
+        <label className={b('label', { required: !!required })}>
           {label}
         </label>
       )}
@@ -65,12 +62,12 @@ export const CustomInput = forwardRef<any, CustomInputProps>(({
         {...devAttrs({ 'data-variant': variant, 'data-size': uiSizeFinal, 'data-borderless': borderless })}
       />
       {error && (
-        <span className={bem.join(bem.e('error'))}>
+        <span className={b('error')}>
           {error}
         </span>
       )}
       {help && !error && (
-        <span className={bem.join(bem.e('help'))}>
+        <span className={b('help')}>
           {help}
         </span>
       )}

@@ -1,7 +1,9 @@
 import React, { forwardRef } from 'react';
 import { Button as AntButton } from 'antd';
 import type { ButtonProps } from 'antd/es/button';
-import { useBem } from '../hooks/useBem';
+import { setup } from 'bem-cn';
+import { useDossierAntd } from '../hooks/useDossierAntd';
+import { getCssPrefix } from '../utils/csl';
 import { mapVariantToAntd } from '../utils/antdMap';
 import type { UiSize, Variant } from '../utils/types';
 import { useUiSize } from '../hooks/useUiSize';
@@ -25,13 +27,12 @@ export const CustomButton = forwardRef<HTMLButtonElement, CustomButtonProps>(({
   ...props 
 }, ref) => {
   const { uiSizeFinal, antdSizeFinal } = useUiSize(uiSize, antdSizeProp);
-  const bem = useBem('button');
-  const buttonClassName = bem.join(
-    bem.b(),
-    bem.m(variant),
-    bem.m(uiSizeFinal),
-    className,
-  );
+  const { prefix } = useDossierAntd();
+  const cssPrefix = getCssPrefix(prefix);
+  const block = setup({ ns: `${cssPrefix}-`, mod: '--', modValue: '-' });
+  const b = block('button');
+
+  const buttonClassName = [b({ [variant]: true, [uiSizeFinal]: true }), className].filter(Boolean).join(' ');
 
   const { type: mappedType, danger: mappedDanger } = mapVariantToAntd(variant, { type, danger });
   const antdSizeMapped: ButtonProps['size'] = antdSizeFinal;

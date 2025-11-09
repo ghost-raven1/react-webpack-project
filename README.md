@@ -20,7 +20,7 @@
 
 - Скоуп‑селектор: стили замкнуты в контейнере `[data-dossier-scope]`.
 - Контейнер: `DossierProvider` оборачивает детей в `<div data-dossier-scope={prefix}>`.
-- Классы компонентов: генерируются только `${prefixCsl}-*` через фабрику `createBem(...)` (BEM).
+- Классы компонентов: формируются как `${prefix}-*` через `bem-cn` на основе префикса из контекста.
 - Анти‑утечка: стили применяются только внутри контейнера с атрибутом `data-dossier-scope`, не пересекаются с соседними приложениями/микрофронтендами.
 
 ## Как это работает
@@ -35,13 +35,13 @@
 - Хук: `useDossierAntd` предоставляет `prefix` и вспомогательную `getClassName`, но классы компонентов статические — это повышает производительность и предсказуемость.
 
 ### Настраиваемый префикс классов
-- Компоненты добавляют классы только с вашим префиксом из контекста (`prefixCsl`).
-- Пример: если `prefixCsl="crm"`, то кнопка получит классы `crm-button crm-button--primary crm-button--medium`.
+- Компоненты добавляют классы только с вашим префиксом из контекста (`prefix`).
+- Пример: если `prefix="crm"`, то кнопка получит классы `crm-button crm-button--primary crm-button--medium`.
 - Изоляция по контейнеру (`[data-dossier-scope]`) остаётся строгой и не зависит от значения префикса классов.
 
 Пример
 ```tsx
-<DossierProvider prefix="crm" prefixCsl="crm">
+<DossierProvider prefix="crm">
   <CustomButton variant="primary" />
 </DossierProvider>
 ```
@@ -66,7 +66,7 @@
 - Импортируйте базовые стили Ant Design в точке входа: `import 'antd/dist/antd.css'`.
 - Оберните ваш UI в `DossierProvider`:
   ```tsx
-  <DossierProvider prefix="crm" prefixCsl="crm">
+  <DossierProvider prefix="crm">
     <YourWidget />
   </DossierProvider>
   ```
@@ -74,10 +74,10 @@
 - Больше ничего настраивать не нужно: изоляция обеспечивается атрибутом `[data-dossier-scope]`.
 
 ## Миграция с существующих решений
-- Если у вас были динамические классы (например, `crm-button`), укажите `prefixCsl="crm"` — компоненты добавят эти классы автоматически вместе с базовыми `c-*`.
+- Если у вас были динамические классы (например, `crm-button`), укажите `prefix="crm"` — компоненты добавят эти классы автоматически.
 - Если вы опирались на глобальные селекторы, перенесите логику в область контейнера: используйте `[data-dossier-scope]` в ваших стилях или замкните стили внутри `DossierProvider`.
 - Для AntD v4 удалите использование пропа `theme` у `ConfigProvider` — тема не прокидывается из провайдера.
-- Проверка: классы элементов должны содержать одновременно `c-*` и ваши `${prefixCsl}-*`, а стили применяться только внутри контейнера провайдера.
+- Проверка: классы элементов должны содержать `${prefix}-*`, а стили применяться только внутри контейнера провайдера.
 
 ### Наложение на чистые AntD компоненты (без наших классов)
 - Кнопки: внутри `[data-dossier-scope]` добавлены селекторы, которые оверлеят стили на чистые AntD кнопки:
@@ -85,11 +85,11 @@
   - Варианты — `.ant-btn-primary` (как `primary`), `.ant-btn-dangerous` (как `danger`), `.ant-btn-dashed` (как `secondary`).
   - Размеры — `.ant-btn-sm`, `.ant-btn-lg`.
   Это позволяет использовать `<Button>` из AntD без добавления `className`, при этом изоляция сохраняется.
-- Инпуты: внутри `[data-dossier-scope]` базовые стили применяются к `.ant-input` и `.ant-input-affix-wrapper` (hover/focus, рамка, фон). Состояния (`error/success/warning`) и режим `borderless` по‑прежнему управляются статическими классами (`c-*` или `${prefixCsl}-*`).
+- Инпуты: внутри `[data-dossier-scope]` базовые стили применяются к `.ant-input` и `.ant-input-affix-wrapper` (hover/focus, рамка, фон). Состояния (`error/success/warning`) и режим `borderless` управляются префиксованными классами `${prefix}-*`.
 - Рекомендуем миграцию поэтапно:
   1) Обернуть зону в `DossierProvider` и проверить чистые AntD компоненты.
   2) Для расширенных состояний добавить статические классы через утилиту `csl.ts` или наши компоненты‑обёртки.
-  3) При желании отказаться от `c-*` — обновить стили, оставив только `${prefixCsl}-*`.
+3) Если ранее использовались `c-*`, обновите стили на `${prefix}-*`.
 
 ## Чеклист интеграции в single-spa
 - Подключены базовые стили Ant Design в host‑приложении.
@@ -100,7 +100,7 @@
   </DossierProvider>
   ```
 - Стили не выходят за пределы контейнера: селекторы начинаются с `[data-dossier-scope]`.
-- Тесты/аналитика могут использовать `${prefixCsl}-*` классы; библиотека по‑прежнему стилизует по `c-*`.
+- Тесты и аналитика могут использовать `${prefix}-*` классы.
 
 ### Мини‑пример single‑spa: mount/unmount
 
@@ -115,11 +115,11 @@ import { MicrofrontendRoot } from './src/App';
 
 let root: Root | null = null;
 
-export function mount(el: HTMLElement, options?: { prefix?: string; prefixCsl?: string }) {
-  const { prefix = 'crm', prefixCsl = prefix } = options || {};
+export function mount(el: HTMLElement, options?: { prefix?: string }) {
+  const { prefix = 'crm' } = options || {};
   root = createRoot(el);
   root.render(
-    <DossierProvider prefix={prefix} prefixCsl={prefixCsl}>
+    <DossierProvider prefix={prefix}>
       <MicrofrontendRoot />
     </DossierProvider>
   );
@@ -134,7 +134,7 @@ export function unmount() {
 
 // host‑код:
 // const container = document.getElementById('mfe-crm');
-// mount(container!, { prefix: 'crm', prefixCsl: 'crm' });
+// mount(container!, { prefix: 'crm' });
 // ... позже:
 // unmount();
 ```
@@ -144,27 +144,14 @@ export function unmount() {
 ## Интеграция в библиотеку
 
 - Обёртка: экспортируйте/используйте `DossierProvider` вокруг вашего компонента/виджета.
-- Стили: подключите ваши `.less` со скоупом `[data-dossier-scope]` и статическими классами `c-*`.
+- Стили: подключите ваши `.less` со скоупом `[data-dossier-scope]` и префиксованными классами `${prefix}-*`.
 - AntD: укажите `antd` в `peerDependencies` вашей библиотеки, а подключение базовых стилей (`antd/dist/antd.css`) оставьте на host‑приложение.
 
 ## Утилиты
 
-- `csl.ts`: фабрика BEM
-  - Используйте `createBem(prefix, block)`:
-  ```ts
-  import { createBem, getCssPrefix } from './src/utils/csl';
-  const bem = createBem(getCssPrefix('crm'), 'button');
-  const className = bem.join(
-    bem.b(),              // crm-button
-    bem.m('primary'),     // crm-button--primary
-    bem.e('icon'),        // crm-button__icon
-    bem.em('icon', 'sm'), // crm-button__icon--sm
-    'extra'               // произвольное
-  );
-  // "crm-button crm-button--primary crm-button__icon crm-button__icon--sm extra"
-  ```
-- `join(...)` автоматически удаляет дубликаты и пропускает ложные значения.
-- `getCssPrefix(value)` нормализует префикс, дефолт — `dossier`.
+- `csl.ts`: вспомогательные функции для статических классов `${prefix}-*` и нормализации префикса.
+  - `getCssPrefix(value)`: нормализует префикс, дефолт — `dossier`.
+  - Для генерации BEM‑классов используем `bem-cn` непосредственно в компонентах.
 
 - `antdMap.ts`: мапперы для интеграции с AntD
   - `mapVariantToAntd(variant, incoming?)`: переводит `Variant` в `ButtonProps['type']` и `danger`, учитывая входящие пропсы.
@@ -178,12 +165,6 @@ export function unmount() {
 
 ## Хуки
 
-- `useBem(block)`: возвращает BEM‑фабрику на основе `prefixCsl` из контекста.
-  - Пример:
-    ```ts
-    const bem = useBem('input');
-    const cls = bem.join(bem.b(), bem.m('small'), bem.e('field'));
-    ```
 - `useUiSize(uiSize?, antdSize?)`: унифицирует вывод размера.
   - Возвращает `{ uiSizeFinal, antdSizeFinal }`, где `medium` → `middle` для AntD.
 - `useDossierAntd()`: предоставляет `{ prefix, prefixCsl, getClassName }`.
@@ -197,7 +178,7 @@ export function unmount() {
 ## Компоненты (пример)
 
 - `CustomButton`, `CustomInput`, `CustomSelect`
-  - Используют `useBem` для классов и `useUiSize` для размеров.
+  - Используют `bem-cn` для классов и `useUiSize` для размеров.
   - `CustomButton`: `variant` маппится в тип/danger AntD кнопки.
   - `CustomInput`/`CustomSelect`: поддерживают `label`, `help`, `required`; в DEV рендерят полезные `data-*` атрибуты.
 
@@ -205,16 +186,16 @@ export function unmount() {
 
 - Оберните зону UI в `DossierProvider`:
   ```tsx
-  <DossierProvider prefix="crm" prefixCsl="crm">
+  <DossierProvider prefix="crm">
     <YourWidget />
   </DossierProvider>
   ```
-- Перенесите стили под скоуп `[data-dossier-scope]` и используйте статические классы `${prefixCsl}-${block}`:
+- Перенесите стили под скоуп `[data-dossier-scope]` и используйте статические классы `${prefix}-${block}`:
   ```less
   [data-dossier-scope] .ant-input.crm-input__field { /* ... */ }
   [data-dossier-scope] .crm-input__field--error { /* ... */ }
   ```
-- Формируйте `className` через `useBem('input')` и `bem.join(...)` вместо конкатенаций строк.
+- Формируйте `className` через `bem-cn`: `setup({ ns: prefix + '-' })` и `block('input')(mods)`.
 - Унифицируйте размер через `useUiSize(uiSize, size)` и используйте `antdSizeFinal` для пропа `size`.
 - Для кнопок применяйте `mapVariantToAntd(variant, { type, danger })`.
 - Добавляйте `data-*` только через `devAttrs(...)`, чтобы они не попадали в продакшен.
@@ -222,11 +203,11 @@ export function unmount() {
 ## Типичные ошибки
 
 - Забытый `DossierProvider`
-  - Симптомы: хуки `useBem`/`useDossierAntd` возвращают пустые значения или падают; классы без префикса; стили «не цепляются».
-  - Причина: компоненты рендерятся вне контейнера `[data-dossier-scope]` и без контекстных значений `prefix/prefixCsl`.
+  - Симптомы: хук `useDossierAntd` возвращает пустые значения или падает; классы без префикса; стили «не цепляются».
+  - Причина: компоненты рендерятся вне контейнера `[data-dossier-scope]` и без контекстного значения `prefix`.
   - Решение:
     ```tsx
-    <DossierProvider prefix="crm" prefixCsl="crm">
+    <DossierProvider prefix="crm">
       <YourWidget />
     </DossierProvider>
     ```
@@ -236,7 +217,7 @@ export function unmount() {
   - Причина: в провайдере заданы разные значения `prefix` и `prefixCsl`, а стили/компоненты ожидают одно и то же пространство имён.
   - Решение: выровнять значения и стили:
     ```tsx
-    <DossierProvider prefix="crm" prefixCsl="crm"> ... </DossierProvider>
+    <DossierProvider prefix="crm"> ... </DossierProvider>
     // Либо осознанно различать: контейнер — crm, классы — admin, и скорректировать стили.
     ```
 
@@ -268,11 +249,9 @@ export function unmount() {
     ```
 
 - Несоответствие BEM‑блока и стилей
-  - Симптомы: классы формируются, но стили не применяются; в коде `useBem('select')`, а стили — для `input` или `c-*`.
-  - Причина: разный BEM‑блок и/или разные подходы (статические `c-*` против префиксованных `${prefixCsl}-*`).
-  - Решение: привести к одному варианту:
-    - Если используете префиксованные: стили и `useBem(block)` должны совпадать (`block = 'select'` → `.crm-select__...`).
-    - Если используете `c-*`: убедиться, что и компоненты, и стили используют один блок (`c-select`).
+- Симптомы: классы формируются, но стили не применяются; блок `select`, а стили — для `input` или другого префикса/блока.
+- Причина: разный BEM‑блок и/или несовпадающий префикс; убедитесь, что блоки и `${prefix}` совпадают между компонентом и стилями.
+  - Решение: привести к одному варианту и синхронизировать блоки (`block = 'select'` → `.crm-select__...`).
 
 - DEV‑атрибуты попадают в прод
   - Симптомы: заметные `data-*` в итоговой разметке продакшена.
@@ -296,7 +275,7 @@ export function unmount() {
 
 Пример:
 ```tsx
-<DossierProvider prefix="crm-admin" prefixCsl="crm-admin" strict>
+<DossierProvider prefix="crm-admin" strict>
   <App />
 </DossierProvider>
 ```
@@ -308,7 +287,7 @@ export function unmount() {
 ## Демонстрация «анти‑утечки» и «смена префикса на лету»
 
 - На странице `PrefixTestPage.tsx` есть две колонки: слева — вне `DossierProvider` (стили не применяются), справа — внутри (стили изолированы).
-- В правой колонке можно менять `prefix` в реальном времени: изменится только `className` (`${prefixCsl}-*`), при этом изоляция останется прежней.
+- В правой колонке можно менять `prefix` в реальном времени: изменится только `className` (`${prefix}-*`), при этом изоляция останется прежней.
 
 ## Примечания
 
