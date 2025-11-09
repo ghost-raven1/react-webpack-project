@@ -182,6 +182,523 @@ export function unmount() {
   - `CustomButton`: `variant` маппится в тип/danger AntD кнопки.
   - `CustomInput`/`CustomSelect`: поддерживают `label`, `help`, `required`; в DEV рендерят полезные `data-*` атрибуты.
 
+## Примеры интеграции AntD компонентов
+
+Ниже — практические примеры использования AntD внутри `DossierProvider`. Важно:
+- Импортируйте базовые стили: `import 'antd/dist/antd.css'` в точке входа.
+- Оборачивайте зону в `DossierProvider`. Для единых классов можно задать `antdConfig={{ prefixCls: prefix }}`.
+
+Минимальная обёртка:
+```tsx
+import React from 'react';
+import { DossierProvider } from './src/contexts/DossierAntdContext';
+
+export function Demo() {
+  return (
+    <DossierProvider prefix="crm" antdConfig={{ prefixCls: 'crm' }}>
+      {/* здесь рендерим AntD компоненты */}
+    </DossierProvider>
+  );
+}
+```
+
+### Button
+```tsx
+import { Button, Space } from 'antd';
+
+function Buttons() {
+  return (
+    <Space>
+      <Button>Default</Button>
+      <Button type="primary">Primary</Button>
+      <Button type="dashed">Dashed</Button>
+      <Button danger>Danger</Button>
+      <Button type="primary" size="large">Large</Button>
+    </Space>
+  );
+}
+```
+
+Если используете `CustomButton`, маппинг вариантов делается автоматически:
+```tsx
+import { CustomButton } from './src/components/CustomButton';
+
+<CustomButton variant="primary" uiSize="large">Сохранить</CustomButton>
+```
+
+### Input
+```tsx
+import { Input, Space } from 'antd';
+
+function Inputs() {
+  return (
+    <Space direction="vertical" style={{ width: 280 }}>
+      <Input placeholder="Name" size="middle" />
+      <Input.Password placeholder="Password" size="middle" />
+      <Input addonBefore="+1" placeholder="Phone" />
+    </Space>
+  );
+}
+```
+
+### Select
+```tsx
+import { Select } from 'antd';
+
+const options = [
+  { value: 'a', label: 'Option A' },
+  { value: 'b', label: 'Option B' },
+];
+
+function Selects() {
+  return (
+    <Select options={options} placeholder="Choose" style={{ width: 200 }} size="middle" />
+  );
+}
+```
+
+### Checkbox
+```tsx
+import { Checkbox } from 'antd';
+
+function Checkboxes() {
+  return (
+    <>
+      <Checkbox>Accept terms</Checkbox>
+      <Checkbox defaultChecked>Newsletter</Checkbox>
+    </>
+  );
+}
+```
+
+### Radio
+```tsx
+import { Radio } from 'antd';
+
+function Radios() {
+  return (
+    <Radio.Group defaultValue="m">
+      <Radio value="s">Small</Radio>
+      <Radio value="m">Middle</Radio>
+      <Radio value="l">Large</Radio>
+    </Radio.Group>
+  );
+}
+```
+
+### Form (вертикальная валидация)
+```tsx
+import { Form, Input, Button } from 'antd';
+
+function LoginForm() {
+  const onFinishFailed = () => {/* демонстрация стилей ошибок */};
+  return (
+    <Form layout="vertical" onFinishFailed={onFinishFailed} style={{ width: 320 }}>
+      <Form.Item label="Email" name="email" rules={[{ required: true, type: 'email' }]}> 
+        <Input placeholder="mail@example.com" />
+      </Form.Item>
+      <Form.Item label="Password" name="password" rules={[{ required: true, min: 6 }]}> 
+        <Input.Password />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit">Login</Button>
+      </Form.Item>
+    </Form>
+  );
+}
+```
+
+Примечания к стилям:
+- Для `Checkbox`, `Radio` и ошибок `Form.Item` добавлены префикс‑агностичные оверлеи в `src/styles/prefixAgnostic.less`.
+- Для других AntD компонентов используйте тот же принцип: 
+  внутри `[data-dossier-scope]` добавляйте селекторы вида `[class*='-tabs']`, `[class*='-modal']` и т.п., чтобы сохранить изоляцию без жёсткой привязки к `prefixCls`.
+
+## Примеры стилей (LESS) для AntD
+
+Все селекторы примерные и префикс‑агностичные: работают с любым `prefixCls` (`ant-`, `crm-`, `admin-`). Ключевой контейнер — `[data-dossier-scope]`.
+
+### Button
+```less
+[data-dossier-scope] {
+  [class*='-btn'] {
+    border-radius: 6px;
+  }
+  [class*='-btn-primary'] {
+    background: #722ed1;
+    border-color: #722ed1;
+  }
+  [class*='-btn-primary']:hover {
+    background: #531dab;
+    border-color: #531dab;
+  }
+  [class*='-btn-sm'] { padding: 0 12px; }
+  [class*='-btn-lg'] { padding: 0 20px; }
+}
+```
+
+### Input
+```less
+[data-dossier-scope] {
+  [class*='-input'] { transition: all .2s ease; }
+  [class*='-input-affix-wrapper'] { border-radius: 6px; }
+  [class*='-input-focused'], [class*='-input-affix-wrapper']:hover {
+    border-color: #722ed1;
+    box-shadow: 0 0 0 2px rgba(114, 46, 209, .15);
+  }
+}
+```
+
+### Select
+```less
+[data-dossier-scope] {
+  [class*='-select'] [class*='-select-selector'] {
+    border-radius: 6px;
+  }
+  [class*='-select']:hover [class*='-select-selector'] {
+    border-color: #722ed1;
+  }
+  [class*='-select-sm'] [class*='-select-selector'] { min-height: 24px; }
+  [class*='-select-lg'] [class*='-select-selector'] { min-height: 40px; }
+}
+```
+
+### Checkbox
+```less
+[data-dossier-scope] {
+  [class*='-checkbox'] {
+    [class*='-checkbox-inner'] {
+      border: 1px solid #d3adf7; border-radius: 2px; transition: all .2s ease;
+    }
+    &:hover [class*='-checkbox-inner'] { border-color: #531dab; }
+    &[class*='-checkbox-checked'] [class*='-checkbox-inner'] {
+      background-color: #722ed1; border-color: #722ed1;
+    }
+  }
+}
+```
+
+### Radio
+```less
+[data-dossier-scope] {
+  [class*='-radio'] {
+    [class*='-radio-inner'] { border: 1px solid #d3adf7; transition: all .2s ease; }
+    &:hover [class*='-radio-inner'] { border-color: #531dab; }
+    &[class*='-radio-checked'] [class*='-radio-inner'] { border-color: #722ed1; }
+  }
+}
+```
+
+### Form Item (ошибки)
+```less
+[data-dossier-scope] {
+  [class*='-form-item'] { margin-bottom: 16px; }
+  [class*='-form-item-has-error'] {
+    [class*='-form-item-explain'] { color: #eb2f96; }
+    [class*='-input'], [class*='-select'] [class*='-select-selector'] {
+      border-color: #eb2f96; box-shadow: 0 0 0 2px rgba(235,47,150,.2);
+    }
+  }
+}
+```
+
+### Tabs
+```less
+[data-dossier-scope] {
+  [class*='-tabs'] {
+    [class*='-tabs-tab'] { padding: 10px 16px; }
+    [class*='-tabs-tab-active'] { color: #722ed1; }
+    [class*='-tabs-ink-bar'] { background: #722ed1; }
+  }
+}
+```
+
+### Modal
+```less
+[data-dossier-scope] {
+  [class*='-modal'] {
+    [class*='-modal-header'] { border-bottom: 1px solid #f0f0f0; }
+    [class*='-modal-footer'] { border-top: 1px solid #f0f0f0; }
+    [class*='-modal-content'] { border-radius: 8px; }
+  }
+}
+```
+
+### Tooltip
+```less
+[data-dossier-scope] {
+  [class*='-tooltip'] [class*='-tooltip-inner'] {
+    border-radius: 6px; background: #1f1f1f; color: #fff;
+  }
+}
+```
+
+### DatePicker
+```less
+[data-dossier-scope] {
+  [class*='-picker'] {
+    [class*='-picker-input'] { border-radius: 6px; }
+    [class*='-picker-panel'] [class*='-picker-cell-selected'] {
+      background: rgba(114,46,209,.12);
+    }
+  }
+}
+```
+
+### Switch
+```less
+[data-dossier-scope] {
+  [class*='-switch'] { background: #bfbfbf; }
+  [class*='-switch-checked'] { background: #722ed1; }
+}
+```
+
+### Table
+```less
+[data-dossier-scope] {
+  [class*='-table'] {
+    [class*='-table-thead'] [class*='-table-cell'] { background: #fafafa; }
+    [class*='-table-row']:hover { background: #f5f0ff; }
+  }
+}
+```
+
+## Дополнительные снипеты (AntD v4.18.9)
+
+Ниже — краткие префикс‑агностичные примеры для остальных часто используемых компонентов. Кастомизируйте значения под вашу палитру.
+
+### Alert
+```less
+[data-dossier-scope] {
+  [class*='-alert'] { border-radius: 6px; }
+  [class*='-alert-message'] { font-weight: 600; }
+  [class*='-alert-description'] { color: #595959; }
+}
+```
+
+### Badge
+```less
+[data-dossier-scope] {
+  [class*='-badge'] [class*='-badge-count'] { background: #722ed1; }
+}
+```
+
+### Breadcrumb
+```less
+[data-dossier-scope] {
+  [class*='-breadcrumb'] { color: #8c8c8c; }
+  [class*='-breadcrumb-link'] { color: #722ed1; }
+}
+```
+
+### Card
+```less
+[data-dossier-scope] {
+  [class*='-card'] { border-radius: 8px; }
+  [class*='-card-head'] { border-bottom: 1px solid #f0f0f0; }
+  [class*='-card-body'] { padding: 16px; }
+}
+```
+
+### Carousel
+```less
+[data-dossier-scope] {
+  [class*='-carousel'] { background: #ffffff; }
+}
+```
+
+### Cascader
+```less
+[data-dossier-scope] {
+  [class*='-cascader'] [class*='-cascader-menu'] { min-width: 160px; }
+}
+```
+
+### Collapse
+```less
+[data-dossier-scope] {
+  [class*='-collapse'] [class*='-collapse-header'] { font-weight: 600; }
+  [class*='-collapse'] [class*='-collapse-content'] { background: #fafafa; }
+}
+```
+
+### Descriptions
+```less
+[data-dossier-scope] {
+  [class*='-descriptions'] [class*='-descriptions-item'] { padding: 8px 0; }
+}
+```
+
+### Drawer
+```less
+[data-dossier-scope] {
+  [class*='-drawer'] [class*='-drawer-content'] { border-radius: 8px; }
+  [class*='-drawer'] [class*='-drawer-header'] { border-bottom: 1px solid #f0f0f0; }
+}
+```
+
+### Dropdown
+```less
+[data-dossier-scope] {
+  [class*='-dropdown'] [class*='-dropdown-menu'] { border-radius: 8px; }
+}
+```
+
+### Empty
+```less
+[data-dossier-scope] {
+  [class*='-empty'] { color: #8c8c8c; }
+}
+```
+
+### Grid / Layout
+```less
+[data-dossier-scope] {
+  [class*='-row'] { row-gap: 12px; }
+  [class*='-layout'] [class*='-layout-header'] { background: #f5f5f5; }
+  [class*='-layout'] [class*='-layout-content'] { padding: 16px; }
+}
+```
+
+### List
+```less
+[data-dossier-scope] {
+  [class*='-list'] [class*='-list-item'] { padding: 12px 16px; }
+}
+```
+
+### Menu
+```less
+[data-dossier-scope] {
+  [class*='-menu'] [class*='-menu-item-selected'] { background: #f5f0ff; }
+}
+```
+
+### Pagination
+```less
+[data-dossier-scope] {
+  [class*='-pagination'] [class*='-pagination-item'] { border-radius: 4px; }
+  [class*='-pagination'] [class*='-pagination-item-active'] { border-color: #722ed1; }
+}
+```
+
+### Popconfirm
+```less
+[data-dossier-scope] {
+  [class*='-popconfirm'] { border-radius: 8px; }
+  [class*='-popconfirm-message'] { color: #595959; }
+}
+```
+
+### Popover
+```less
+[data-dossier-scope] {
+  [class*='-popover'] [class*='-popover-inner'] { border-radius: 8px; }
+}
+```
+
+### Progress
+```less
+[data-dossier-scope] {
+  [class*='-progress'] [class*='-progress-bg'] { background: #722ed1; }
+}
+```
+
+### Result
+```less
+[data-dossier-scope] {
+  [class*='-result'] [class*='-result-title'] { font-weight: 600; }
+}
+```
+
+### Skeleton
+```less
+[data-dossier-scope] {
+  [class*='-skeleton'] [class*='-skeleton-title'] { width: 60%; }
+}
+```
+
+### Slider
+```less
+[data-dossier-scope] {
+  [class*='-slider'] [class*='-slider-handle'] { border-color: #722ed1; }
+  [class*='-slider'] [class*='-slider-track'] { background: #722ed1; }
+}
+```
+
+### Spin
+```less
+[data-dossier-scope] {
+  [class*='-spin'] [class*='-spin-dot'] { color: #722ed1; }
+}
+```
+
+### Statistic
+```less
+[data-dossier-scope] {
+  [class*='-statistic'] [class*='-statistic-content'] { font-weight: 600; }
+}
+```
+
+### Steps
+```less
+[data-dossier-scope] {
+  [class*='-steps'] [class*='-steps-item-active'] { color: #722ed1; }
+}
+```
+
+### Tag
+```less
+[data-dossier-scope] {
+  [class*='-tag'] { border-radius: 4px; }
+}
+```
+
+### Timeline
+```less
+[data-dossier-scope] {
+  [class*='-timeline'] [class*='-timeline-item'] { padding: 8px 0; }
+}
+```
+
+### Tree / TreeSelect
+```less
+[data-dossier-scope] {
+  [class*='-tree'] [class*='-tree-node-selected'] { background: #f5f0ff; }
+  [class*='-tree-select'] [class*='-select-selector'] { border-radius: 6px; }
+}
+```
+
+### Upload
+```less
+[data-dossier-scope] {
+  [class*='-upload'] [class*='-upload-list'] { row-gap: 8px; }
+}
+```
+
+### Avatar
+```less
+[data-dossier-scope] {
+  [class*='-avatar'] { border-radius: 50%; }
+}
+```
+
+### AutoComplete
+```less
+[data-dossier-scope] {
+  [class*='-auto-complete'] [class*='-select-selector'] { border-radius: 6px; }
+}
+```
+
+### Affix / Anchor / BackTop / Divider
+```less
+[data-dossier-scope] {
+  [class*='-affix'] { z-index: 10; }
+  [class*='-anchor'] [class*='-anchor-link'] { color: #722ed1; }
+  [class*='-back-top'] { border-radius: 50%; }
+  [class*='-divider'] { border-color: #f0f0f0; }
+}
+```
+
 ## Миграция и быстрый гайд
 
 - Оберните зону UI в `DossierProvider`:
@@ -261,10 +778,9 @@ export function unmount() {
 - Неопределённые LESS‑переменные
   - Симптомы: ошибка сборки вида `variable @text-color-secondary is undefined`.
   - Причина: переменная не импортирована или отсутствует в палитрах.
-  - Решение: импортируйте `src/styles/variables.less` или используйте доступные палитры/жёсткие значения как фолбэк:
+  - Решение: определите нужные переменные в вашем проекте и импортируйте их в соответствующие `.less` файлы, либо используйте жёсткие значения как фолбэк:
     ```less
-    @import '../styles/variables.less';
-    .crm-input__help { color: #2f1b4d; /* фолбэк */ }
+    .crm-input__help { color: #2f1b4d; /* пример фолбэка */ }
     ```
 
 ## Гварды контекста и Strict Mode
